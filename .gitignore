@@ -1,0 +1,92 @@
+# Build results
+[Bb]in/
+[Oo]bj/
+[Dd]ebug/
+[Rr]elease/
+x64/
+x86/
+[Aa][Rr][Mm]/
+[Aa][Rr][Mm]64/
+bld/
+[Bb]uild/
+msbuild.log
+msbuild.err
+msbuild.wrn
+[Ll]og/
+[Ll]ogs/
+
+# Visual Studio files and folders
+.vs/
+.vscode/
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+*.userprefs
+*.vspscc
+*.vssscc
+*_i.c
+*_p.c
+*.ncb
+*.tlb
+*.tlh
+*.bak
+*.cache
+*.ilk
+*.log
+[Bb]in
+[Dd]ebug*/
+*.sbr
+obj/
+[Rr]elease*/
+_ReSharper*/
+.idea/
+
+# Visual Studio Code
+.vscode/
+.history/
+
+# IDE settings
+*.suo
+*.user
+*.sln.docstates
+.idea/
+
+# .NET Core
+project.lock.json
+project.fragment.lock.json
+artifacts/
+
+# Environment settings
+appsettings.Development.json
+appsettings.Local.json
+*.Development.json
+
+# Configuration files
+appsettings*.json
+appsettings.json
+!appsettings.json
+appsettings.*.json
+*.Development.json
+*.Production.json
+*.Staging.json
+*.Local.json
+
+# Database files
+*.mdf
+*.ldf
+*.ndf
+*.jfm
+*.dbmdl
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+
+# Visual Studio profiler
+*.psess
+*.vsp
+*.vspx
+*.sap
+appsettings.json
