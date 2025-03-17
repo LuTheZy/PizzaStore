@@ -11,7 +11,6 @@ using PizzaStore.DataTransferObjects;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container
 builder.Services.AddDbContext<PizzeriaDbContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("PizzeriaDbConnection")));
 builder.Services.AddEndpointsApiExplorer();
@@ -60,10 +59,64 @@ if (app.Environment.IsDevelopment())
 app.UseMiddleware<JwtAuthenticationHandler>();
 app.UseMiddleware<AuthorizationMiddleware>();
 
-// Map endpoints
+// Authentication endpoints
 app.MapPost("/login", async (AuthRequestDto request, IAuthService authService) =>
     Results.Ok(await authService.AuthenticateAsync(request)));
 
+// New user registration endpoint
+app.MapPost("/register", async (RegisterUserDto request, IAuthService authService) =>
+{
+    try
+    {
+        var user = await authService.RegisterUserAsync(
+            request.Username,
+            request.Email,
+            request.Password
+        );
+
+        return Results.Created($"/users/{user.Id}", new UserDto
+        {
+            Id = user.Id,
+            Username = user.Username,
+            Email = user.Email,
+            CreatedAt = user.CreatedAt
+        });
+    }
+    catch (InvalidOperationException ex)
+    {
+        return Results.BadRequest(new { error = ex.Message });
+    }
+    catch (Exception ex)
+    {
+        return Results.StatusCode(500);
+    }
+});
+
+// Password reset request endpoint
+app.MapPost("/forgot-password", async (ForgotPasswordDto request, IAuthService authService) =>
+{
+    bool success = await authService.GeneratePasswordResetTokenAsync(request.Email);
+
+    // Always return OK even if email not found for security reasons
+    return Results.Ok(new { message = "If your email is registered, you will receive a password reset link." });
+});
+
+// Password reset confirmation endpoint
+app.MapPost("/reset-password", async (ResetPasswordDto request, IAuthService authService) =>
+{
+    bool success = await authService.ResetPasswordAsync(
+        request.Email,
+        request.Token,
+        request.NewPassword
+    );
+
+    if (success)
+        return Results.Ok(new { message = "Password has been reset successfully." });
+    else
+        return Results.BadRequest(new { error = "Invalid or expired password reset token." });
+});
+
+// Pizza endpoints with authorization
 app.MapGet("/pizzas/{id}", async (int id, IPizzaService service) =>
     await service.GetByIdAsync(id) is Pizza pizza
         ? Results.Ok(pizza)
