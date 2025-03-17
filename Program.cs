@@ -5,6 +5,9 @@ using PizzaStore.Services.Implementations;
 using PizzaStore.Services.Interfaces;
 using Microsoft.OpenApi.Models;
 using PizzaStore.Auth;
+using PizzaStore.Middleware;
+using PizzaStore.Attributes;
+using PizzaStore.DataTransferObjects;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -39,9 +42,9 @@ builder.Services.AddSwaggerGen(c =>
     });
 });
 builder.Services.AddScoped<IPizzaService, PizzaService>();
-
-builder.Services.AddSingleton<IAuthorizationService, AuthorizationService>();
+builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddSingleton<IJwtService, JwtService>();
+builder.Services.AddScoped<IAuthorizationService, AuthorizationService>();
 builder.Services.AddAuthorization();
 
 var app = builder.Build();
@@ -58,24 +61,19 @@ app.UseMiddleware<JwtAuthenticationHandler>();
 app.UseMiddleware<AuthorizationMiddleware>();
 
 // Map endpoints
-app.MapPost("/login", async (AuthRequest request, IAuthService authService) =>
+app.MapPost("/login", async (AuthRequestDto request, IAuthService authService) =>
     Results.Ok(await authService.AuthenticateAsync(request)));
 
-app.MapGet("/pizzas/{id}", async (HttpContext context, int id, IPizzaService service, IAuthorizationService authService) => 
-{
-    if (!authService.IsAuthorized(context))
-        return Results.Unauthorized();
-        
-    return await service.GetByIdAsync(id) is Pizza pizza 
-        ? Results.Ok(pizza) 
-        : Results.NotFound();
-});
+app.MapGet("/pizzas/{id}", async (int id, IPizzaService service) =>
+    await service.GetByIdAsync(id) is Pizza pizza
+        ? Results.Ok(pizza)
+        : Results.NotFound()).WithMetadata(new AuthorizeAttribute());
 
-app.MapGet("/pizzas", async (IPizzaService service) => 
-    await service.GetAllAsync()).WithMetadata(new AuthorizeAttribute());
+app.MapGet("/pizzas", async (IPizzaService service) =>
+    Results.Ok(await service.GetAllAsync())).WithMetadata(new AuthorizeAttribute());
 
-app.MapPost("/pizzas", async (Pizza pizza, IPizzaService service) => 
-    await service.CreateAsync(pizza)).WithMetadata(new AuthorizeAttribute());
+app.MapPost("/pizzas", async (Pizza pizza, IPizzaService service) =>
+    Results.Ok(await service.CreateAsync(pizza))).WithMetadata(new AuthorizeAttribute());
 
 app.MapPut("/pizzas", async (Pizza pizza, IPizzaService service) =>
     await service.UpdateAsync(pizza) is Pizza updated

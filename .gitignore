@@ -90,3 +90,4 @@ npm-debug.log*
 *.vspx
 *.sap
 appsettings.json
+/seed_data.md
